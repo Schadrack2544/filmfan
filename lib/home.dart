@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:filmfan/models/movies.dart';
 import 'package:filmfan/movie.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class Home extends StatefulWidget {
@@ -54,110 +56,236 @@ Future<List<Map<String, dynamic>>> fetchMovies() async {
   return movieslist;
 }
 
+//  class MyHttpOverrides extends HttpOverrides{
+//   @override
+//   HttpClient createHttpClient(SecurityContext context){
+//     return super.createHttpClient(context)
+//       ..badCertificateCallback = (X509Certificate cert, String host, int port)=> true;
+//   }
+// }
 class _HomeState extends State<Home> {
+  bool isInternetAvailable = false;
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text(widget.title),
-      ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-          initialData: [],
-          future: fetchMovies(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              // EasyLoading.show(status: "Loading...");
-              return const Center(
-                  child: CircularProgressIndicator(
-                strokeWidth: 6,
-              ));
-            } else {
-              // EasyLoading.dismiss();
-              return ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    var singleMovie = snapshot.data![index];
-                    // var moviePath = singleMovie.poster_path;
+    if (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS) {
+// Android or iOS specific code
+      bool hasNetwork() {
+        bool isNetworkAvailable = false;
 
-                    return GestureDetector(
-                      onTap: () {
-                        Map<String, dynamic> singleMovieParams = {
-                          "id": singleMovie['id'],
-                          "title": singleMovie['title']
-                        };
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) =>
-                                Movie(params: singleMovieParams)));
+        InternetAddress.lookup('example.com').then((value) {
+          isNetworkAvailable =
+              value.isNotEmpty && value[0].rawAddress.isNotEmpty;
+          return isNetworkAvailable;
+        }).catchError((error) {
+          isNetworkAvailable = false;
+          return isNetworkAvailable;
+        });
+        // return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+        return isNetworkAvailable;
+      }
+
+      isInternetAvailable = hasNetwork();
+      return isInternetAvailable
+          ? Scaffold(
+              appBar: AppBar(
+                backgroundColor: Colors.black,
+                title: Text(widget.title),
+              ),
+              body: FutureBuilder<List<Map<String, dynamic>>>(
+                  initialData: [],
+                  future: fetchMovies(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      // EasyLoading.show(status: "Loading...");
+                      return const Center(
+                          child: CircularProgressIndicator(
+                        strokeWidth: 6,
+                      ));
+                    } else {
+                      // EasyLoading.dismiss();
+                      return ListView.builder(
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            var singleMovie = snapshot.data![index];
+                            // var moviePath = singleMovie.poster_path;
+
+                            return GestureDetector(
+                              onTap: () {
+                                Map<String, dynamic> singleMovieParams = {
+                                  "id": singleMovie['id'],
+                                  "title": singleMovie['title']
+                                };
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) =>
+                                        Movie(params: singleMovieParams)));
+                              },
+                              child: Card(
+                                  child: Column(
+                                children: [
+                                  const SizedBox(height: 20),
+                                  Text("${singleMovie['title']}",
+                                      style: const TextStyle(
+                                          fontSize: 20,
+                                          color: Colors.redAccent,
+                                          fontWeight: FontWeight.bold)),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Image.network(
+                                    "https://image.tmdb.org/t/p/w500/" +
+                                        singleMovie['poster_path'],
+                                    fit: BoxFit.cover,
+                                  ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text(
+                                      "Release date :" +
+                                          singleMovie['release_date']
+                                              .toString(),
+                                      style: const TextStyle(
+                                          fontSize: 20, color: Colors.blue)),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text(
+                                    "Vote average :" +
+                                        singleMovie['vote_average'].toString(),
+                                    style: const TextStyle(
+                                        fontSize: 20, color: Colors.grey),
+                                  ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                ],
+                              )),
+                            );
+                          });
+                    }
+                  }),
+              bottomNavigationBar: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          page = page - 1;
+                        });
                       },
-                      child: Card(
-                          child: Column(
-                        children: [
-                          const SizedBox(height: 20),
-                          Text("${singleMovie['title']}",
+                      child: const Text("Previous")),
+                  ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          page = page + 1;
+                        });
+                      },
+                      child: const Text("Next")),
+                ],
+              ),
+            )
+          : Container(
+              child: const Center(
+                  child: Text("No internet connection!",
+                      style: TextStyle(
+                          decoration: TextDecoration.none, fontSize: 18))));
+    } else {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          title: Text(widget.title),
+        ),
+        body: FutureBuilder<List<Map<String, dynamic>>>(
+            initialData: [],
+            future: fetchMovies(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                // EasyLoading.show(status: "Loading...");
+                return const Center(
+                    child: CircularProgressIndicator(
+                  strokeWidth: 6,
+                ));
+              } else {
+                // EasyLoading.dismiss();
+                return ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      var singleMovie = snapshot.data![index];
+                      // var moviePath = singleMovie.poster_path;
+
+                      return GestureDetector(
+                        onTap: () {
+                          Map<String, dynamic> singleMovieParams = {
+                            "id": singleMovie['id'],
+                            "title": singleMovie['title']
+                          };
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) =>
+                                  Movie(params: singleMovieParams)));
+                        },
+                        child: Card(
+                            child: Column(
+                          children: [
+                            const SizedBox(height: 20),
+                            Text("${singleMovie['title']}",
+                                style: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.redAccent,
+                                    fontWeight: FontWeight.bold)),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Image.network(
+                              "https://image.tmdb.org/t/p/w500/" +
+                                  singleMovie['poster_path'],
+                              fit: BoxFit.cover,
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                                "Release date :" +
+                                    singleMovie['release_date'].toString(),
+                                style: const TextStyle(
+                                    fontSize: 20, color: Colors.blue)),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              "Vote average :" +
+                                  singleMovie['vote_average'].toString(),
                               style: const TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.redAccent,
-                                  fontWeight: FontWeight.bold)),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Image.network(
-                            "https://image.tmdb.org/t/p/w500/" +
-                                singleMovie['poster_path'],
-                            fit: BoxFit.cover,
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                              "Release date :" +
-                                  singleMovie['release_date'].toString(),
-                              style: const TextStyle(
-                                  fontSize: 20, color: Colors.blue)),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                            "Vote average :" +
-                                singleMovie['vote_average'].toString(),
-                            style: const TextStyle(
-                                fontSize: 20, color: Colors.grey),
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                        ],
-                      )),
-                    );
+                                  fontSize: 20, color: Colors.grey),
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                          ],
+                        )),
+                      );
+                    });
+              }
+            }),
+        bottomNavigationBar: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    page = page - 1;
                   });
-            }
-          }),
-      bottomNavigationBar: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  page = page - 1;
-                });
-              },
-              child: const Text("Previous")),
-          ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  page = page + 1;
-                });
-              },
-              child: const Text("Next")),
-        ],
-      ),
-    );
+                },
+                child: const Text("Previous")),
+            ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    page = page + 1;
+                  });
+                },
+                child: const Text("Next")),
+          ],
+        ),
+      );
+    }
   }
 }

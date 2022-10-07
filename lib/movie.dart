@@ -38,9 +38,7 @@ class _MovieState extends State<Movie> {
               future: getSingleMovieDetails(movieId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState==ConnectionState.waiting) {
-                  return  Center(
-                  
-                      child: Column(
+                  return Container(child:  Column(
                         crossAxisAlignment:CrossAxisAlignment.center,
                         mainAxisAlignment:MainAxisAlignment.center,
                         children: [
@@ -49,18 +47,18 @@ class _MovieState extends State<Movie> {
                     strokeWidth: 6,
                   ),
                         ],
-                      ));
+                      ) );
                 } else {
                   Map<String, dynamic>? movie = snapshot.data;
                   print("hahahaah: ${movie!['genres'][0]['name']}");
                   return Card(
-                    color: Colors.amber,
+                    color: Colors.redAccent,
                     child: Column(children: [
                       SizedBox(height: 20),
                       Text(
                         " ${movie['title']}",
                         style: const TextStyle(
-                          color: Colors.redAccent,
+                          color: Colors.black,
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
                         ),
@@ -72,7 +70,8 @@ class _MovieState extends State<Movie> {
                       Image.network(
                         "https://image.tmdb.org/t/p/w500/" +
                             movie['poster_path'],
-                        height: MediaQuery.of(context).size.height * 0.75,
+                        height: MediaQuery.of(context).size.height * 0.8,
+                        width:MediaQuery.of(context).size.width * 0.6,
                         fit: BoxFit.cover,
                       ),
                       const SizedBox(
