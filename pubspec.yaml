@@ -1,5 +1,5 @@
 name: filmfan
-description: A new Flutter project.
+description: An app for movie recommendations.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -29,33 +29,59 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http:
+  http: ^1.6.0
   # flutter_easyloading: ^1.0.1
   flutter_rating_bar:
-  data_connection_checker:
+  #data_connection_checker:
 
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
+  internet_connection_checker: ^3.0.1
+  flutter_dotenv: ^6.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
       
-  flutter_launcher_icons: ^0.10.0
+  flutter_launcher_icons: ^0.14.4
 
-flutter_icons:
-  android: "launcher_icon"
+flutter_launcher_icons:
+  android: true
   ios: true
-  image_path: "assets/Filmfan.png"
+  image_path: "assets/Filmfan.PNG"
+  
+  # Optional: Different icons for different platforms
+  # android: "assets/icon/android_icon.png"
+  # ios: "assets/icon/ios_icon.png"
+  
+  # Optional: Adaptive icon for Android (recommended)
+  adaptive_icon_background: "#ffffff"  # Background color
+  adaptive_icon_foreground: "assets/Filmfan.PNG"
+  
+  # Optional: Web favicon
+  web:
+    generate: true
+    image_path: "assets/Filmfan.PNG"
+    background_color: "#ffffff"
+    theme_color: "#ffffff"
+  
+  # Optional: Windows icon
+  windows:
+    generate: true
+    image_path: "assets/Filmfan.PNG"
+    icon_size: 48
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^1.0.0
+  linux:
+    generate: true
+    image_path: "assets/Filmfan.PNG"
+    icon_size: 48
+  
+  # Optional: macOS icon
+  macos:
+    generate: true
+    image_path: "assets/Filmfan.PNG"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -67,7 +93,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
+  assets:
+   - .env
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

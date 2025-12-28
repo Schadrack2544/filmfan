@@ -1,9 +1,10 @@
 import 'package:filmfan/utils/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'home.dart';
 
-void main() {
+void main() async{
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return 
       MaterialApp(
-        title: 'Flutter Demo',
+        title: 'Film Fan',
         theme: ThemeData(
           primarySwatch: Colors.red,
         ),

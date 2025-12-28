@@ -26,17 +26,24 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Container(
         color: Colors.black,
-        child:  Center(
+        child: Center(
             child: Column(
-              mainAxisAlignment:MainAxisAlignment.center,
-              children: [
-                const Text(
-          "Film Fan",
-          style: TextStyle(color: Colors.redAccent,fontSize:24,decoration:TextDecoration.none ),
-        ),
-        SizedBox(height:30,),
-        const CircularProgressIndicator(strokeWidth: 4,)
-              ],
-            )));
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              "Film Fan",
+              style: TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 24,
+                  decoration: TextDecoration.none),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            const CircularProgressIndicator(
+              strokeWidth: 3,
+            )
+          ],
+        )));
   }
 }
