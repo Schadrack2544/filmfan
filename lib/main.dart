@@ -1,28 +1,35 @@
 import 'package:filmfan/utils/splash_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
-void main() async{
-  await dotenv.load(fileName: ".env");
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return 
-      MaterialApp(
-        title: 'Film Fan',
-        theme: ThemeData(
-          primarySwatch: Colors.red,
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFFE53935),
+      brightness: Brightness.dark,
+    );
+    return MaterialApp(
+      title: 'Film Fan',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: colorScheme,
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFF101014),
+        cardTheme: CardThemeData(
+          margin: EdgeInsets.zero,
+          elevation: 2,
+          clipBehavior: Clip.antiAlias,
         ),
-        home: SplashScreen(),
-        debugShowCheckedModeBanner: false,
-      );
-   
+        appBarTheme: const AppBarTheme(centerTitle: false),
+      ),
+      home: const SplashScreen(),
+    );
   }
 }
