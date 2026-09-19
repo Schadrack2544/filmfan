@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 Future<List<Map<String, dynamic>>> fetchMovies(int page) async {
+  debugPrint('TEST_PROBE fetchMovies page=$page');
   final apiKey = requireTmdbApiKey();
   final response = await http.get(Uri.parse(
     'https://api.themoviedb.org/3/movie/now_playing?api_key=$apiKey&language=en-US&page=$page',
@@ -47,10 +48,19 @@ Map<String, dynamic>? _normalizeMovie(Map movie) {
   };
 }
 
+typedef MoviePageFetcher = Future<List<Map<String, dynamic>>> Function(
+  int page,
+);
+
 class Home extends StatefulWidget {
-  const Home({super.key, required this.title});
+  const Home({
+    super.key,
+    required this.title,
+    this.moviePageFetcher = fetchMovies,
+  });
 
   final String title;
+  final MoviePageFetcher moviePageFetcher;
 
   @override
   State<Home> createState() => _HomeState();
@@ -69,6 +79,7 @@ class _HomeState extends State<Home> {
   int _selectedTab = 0;
   String _query = '';
   int _requestGeneration = 0;
+  bool _isAdjustingScroll = false;
 
   @override
   void initState() {
@@ -92,12 +103,13 @@ class _HomeState extends State<Home> {
       _page = 1;
       _movies = [];
       _loadingInitial = true;
+      _loadingMore = false;
       _hasMore = true;
       _initialError = null;
       _loadMoreError = null;
     });
     try {
-      final movies = await fetchMovies(1);
+      final movies = await widget.moviePageFetcher(1);
       if (!mounted || generation != _requestGeneration) return;
       setState(() {
         _movies = movies;
@@ -114,7 +126,8 @@ class _HomeState extends State<Home> {
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients ||
+    if (_isAdjustingScroll ||
+        !_scrollController.hasClients ||
         _scrollController.position.extentAfter > 600 ||
         _loadingMore ||
         !_hasMore) {
@@ -125,7 +138,7 @@ class _HomeState extends State<Home> {
 
   Future<void> _loadMore() async {
     if (_loadingMore || !_hasMore || _loadingInitial) return;
-    final generation = _requestGeneration;
+    final generation = ++_requestGeneration;
     final distanceFromBottom = _scrollController.hasClients
         ? _scrollController.position.maxScrollExtent -
             _scrollController.position.pixels
@@ -133,7 +146,7 @@ class _HomeState extends State<Home> {
     setState(() => _loadingMore = true);
     try {
       final nextPage = _page + 1;
-      final nextMovies = await fetchMovies(nextPage);
+      final nextMovies = await widget.moviePageFetcher(nextPage);
       if (!mounted || generation != _requestGeneration) return;
       setState(() {
         _page = nextPage;
@@ -153,14 +166,18 @@ class _HomeState extends State<Home> {
           position.minScrollExtent,
           position.maxScrollExtent,
         );
+        _isAdjustingScroll = true;
         _scrollController.jumpTo(targetOffset.toDouble());
+        _isAdjustingScroll = false;
       });
     } catch (error) {
       if (mounted && generation == _requestGeneration) {
         setState(() => _loadMoreError = error);
       }
     } finally {
-      if (mounted) setState(() => _loadingMore = false);
+      if (mounted && generation == _requestGeneration) {
+        setState(() => _loadingMore = false);
+      }
     }
   }
 
@@ -238,10 +255,19 @@ class _HomeState extends State<Home> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_initialError != null) {
+      final isConfigurationError = _initialError is StateError &&
+          (_initialError as StateError)
+              .message
+              .toString()
+              .startsWith('TMDB_API_KEY is not configured');
       return _MessageState(
-        icon: Icons.cloud_off,
-        title: 'Could not load movies',
-        message: 'Check your connection and try again.',
+        icon: isConfigurationError ? Icons.settings : Icons.cloud_off,
+        title: isConfigurationError
+            ? 'TMDB API key is missing'
+            : 'Could not load movies',
+        message: isConfigurationError
+            ? 'Build the release with --dart-define=TMDB_API_KEY=your_key.'
+            : 'Check your connection and try again.',
         actionLabel: 'Retry',
         onAction: _loadMovies,
       );
