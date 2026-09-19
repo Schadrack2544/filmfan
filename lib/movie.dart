@@ -113,36 +113,39 @@ class _MovieState extends State<Movie> {
           ),
         ],
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _details,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError || snapshot.data == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.error_outline, size: 48),
-                    const SizedBox(height: 12),
-                    const Text('Could not load movie details.'),
-                    const SizedBox(height: 16),
-                    FilledButton.tonal(
-                      onPressed: () => setState(() {
-                        _details = _loadDetails(_movieId(widget.params));
-                      }),
-                      child: const Text('Retry'),
-                    ),
-                  ],
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _details,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError || snapshot.data == null) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48),
+                      const SizedBox(height: 12),
+                      const Text('Could not load movie details.'),
+                      const SizedBox(height: 16),
+                      FilledButton.tonal(
+                        onPressed: () => setState(() {
+                          _details = _loadDetails(_movieId(widget.params));
+                        }),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }
-          return _buildDetails(context, snapshot.data!);
-        },
+              );
+            }
+            return _buildDetails(context, snapshot.data!);
+          },
+        ),
       ),
     );
   }
