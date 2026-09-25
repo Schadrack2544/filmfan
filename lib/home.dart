@@ -67,6 +67,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  static const _moviesPerPage = 20;
+
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   List<Map<String, dynamic>> _movies = [];
@@ -114,7 +116,7 @@ class _HomeState extends State<Home> {
       setState(() {
         _movies = movies;
         _loadingInitial = false;
-        _hasMore = movies.isNotEmpty;
+        _hasMore = movies.length == _moviesPerPage;
       });
     } catch (error) {
       if (!mounted || generation != _requestGeneration) return;
@@ -150,7 +152,7 @@ class _HomeState extends State<Home> {
       if (!mounted || generation != _requestGeneration) return;
       setState(() {
         _page = nextPage;
-        _hasMore = nextMovies.isNotEmpty;
+        _hasMore = nextMovies.length == _moviesPerPage;
         _loadMoreError = null;
         final existingIds = _movies.map((movie) => movie['id']).toSet();
         _movies = [
