@@ -41,12 +41,12 @@ void main() {
     expect(requestedPages, [1]);
     expect(find.text('Movie 0'), findsOneWidget);
 
-    await tester.drag(find.byType(GridView), const Offset(0, -3000));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -3000));
     await tester.pumpAndSettle();
 
     expect(requestedPages, contains(2));
-    final grid = tester.widget<GridView>(find.byType(GridView));
-    final delegate = grid.childrenDelegate as SliverChildBuilderDelegate;
+    final grid = tester.widget<SliverGrid>(find.byType(SliverGrid));
+    final delegate = grid.delegate as SliverChildBuilderDelegate;
     expect(delegate.estimatedChildCount, 40);
   });
 
@@ -66,11 +66,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.drag(find.byType(GridView), const Offset(0, -3000));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -3000));
     await tester.pumpAndSettle();
     expect(requestedPages, [1, 2]);
 
-    await tester.drag(find.byType(GridView), const Offset(0, -3000));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -3000));
     await tester.pumpAndSettle();
     expect(requestedPages, [1, 2]);
   });

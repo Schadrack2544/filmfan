@@ -1,9 +1,12 @@
 import 'package:filmfan/utils/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
+
   // Android 15+ (SDK 35) enforces edge-to-edge for apps targeting it; this
   // opts in explicitly on older SDKs too so behavior is consistent, and
   // makes the system bars transparent so Flutter draws behind them.

@@ -81,7 +81,6 @@ class _HomeState extends State<Home> {
   int _selectedTab = 0;
   String _query = '';
   int _requestGeneration = 0;
-  bool _isAdjustingScroll = false;
 
   @override
   void initState() {
@@ -128,8 +127,7 @@ class _HomeState extends State<Home> {
   }
 
   void _onScroll() {
-    if (_isAdjustingScroll ||
-        !_scrollController.hasClients ||
+    if (!_scrollController.hasClients ||
         _scrollController.position.extentAfter > 600 ||
         _loadingMore ||
         !_hasMore) {
@@ -141,10 +139,6 @@ class _HomeState extends State<Home> {
   Future<void> _loadMore() async {
     if (_loadingMore || !_hasMore || _loadingInitial) return;
     final generation = ++_requestGeneration;
-    final distanceFromBottom = _scrollController.hasClients
-        ? _scrollController.position.maxScrollExtent -
-            _scrollController.position.pixels
-        : 0.0;
     setState(() => _loadingMore = true);
     try {
       final nextPage = _page + 1;
@@ -159,18 +153,6 @@ class _HomeState extends State<Home> {
           ..._movies,
           ...nextMovies.where((movie) => existingIds.add(movie['id'])),
         ];
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_scrollController.hasClients) return;
-        final position = _scrollController.position;
-        final targetOffset =
-            (position.maxScrollExtent - distanceFromBottom).clamp(
-          position.minScrollExtent,
-          position.maxScrollExtent,
-        );
-        _isAdjustingScroll = true;
-        _scrollController.jumpTo(targetOffset.toDouble());
-        _isAdjustingScroll = false;
       });
     } catch (error) {
       if (mounted && generation == _requestGeneration) {
@@ -311,29 +293,39 @@ class _HomeState extends State<Home> {
               : constraints.maxWidth >= 600
                   ? 3
                   : 2;
-          return GridView.builder(
+          return CustomScrollView(
             controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.55,
-            ),
-            itemCount: filtered.length +
-                (_loadingMore || _loadMoreError != null ? 1 : 0),
-            itemBuilder: (_, index) {
-              if (index < filtered.length) {
-                return _MovieCard(
-                  movie: filtered[index],
-                  onTap: () => _openMovie(filtered[index]),
-                );
-              }
-              return _LoadMoreCard(
-                error: _loadMoreError != null,
-                onRetry: _loadMore,
-              );
-            },
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                sliver: SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.55,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (_, index) => _MovieCard(
+                      movie: filtered[index],
+                      onTap: () => _openMovie(filtered[index]),
+                    ),
+                    childCount: filtered.length,
+                  ),
+                ),
+              ),
+              if (_loadingMore || _loadMoreError != null)
+                SliverToBoxAdapter(
+                  child: _LoadMoreFooter(
+                    error: _loadMoreError != null,
+                    onRetry: _loadMore,
+                  ),
+                ),
+              const SliverPadding(
+                padding: EdgeInsets.only(bottom: 24),
+              ),
+            ],
           );
         },
       ),
@@ -403,29 +395,28 @@ class _MovieCard extends StatelessWidget {
   }
 }
 
-class _LoadMoreCard extends StatelessWidget {
-  const _LoadMoreCard({required this.error, required this.onRetry});
+class _LoadMoreFooter extends StatelessWidget {
+  const _LoadMoreFooter({required this.error, required this.onRetry});
 
   final bool error;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: error ? onRetry : null,
-        child: Center(
-          child: error
-              ? const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.cloud_off),
-                    SizedBox(height: 8),
-                    Text('Tap to retry'),
-                  ],
-                )
-              : const CircularProgressIndicator(),
-        ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+      child: Center(
+        child: error
+            ? TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Could not load more · Retry'),
+              )
+            : const SizedBox(
+                height: 28,
+                width: 28,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              ),
       ),
     );
   }
